@@ -106,7 +106,12 @@ exit
 
 # Ответ 5
 
-??
+```
+strings dump.pcapng | grep SEC
+          SECRET = "yqqPfQiFZmXsmnZQYMPF";
+          SECRET = "yqqPfQiFZmXsmnZQYMPF";
+          SECRET = "yqqPfQiFZmXsmnZQYMPF";
+```
 
 # Условие 6
 
