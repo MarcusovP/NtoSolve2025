@@ -1,11 +1,27 @@
-# Условие
+# Условие 1
 14. Враг врага 2 - 1
 
 Разведка донесла, что APT «Таймырский муксун» недавно провернул изящную операцию против «Таежного кролика». Поговаривают, что в инфраструктуру «Кролика» было внедрено вредоносное ПО, которое успело наделать шума. Теперь наша задача — докопаться до истины. Вперёд, охотники за «кроличьими» секретами!
 
 Необходимые файлы должны быть на вашем оборудовании. К заданию относится образ linux системы.
 
-1. Как был получен первичный доступ к системе? (2 балла)
+- 1. Как был получен первичный доступ к системе? (2 балла)
+
+# Ответ 1
+
+мб через уязвимое приложение в докере или что-то в докере (`172.18.0.3`)
+
+# Условие 2
+
+15. Враг врага 2 - 2
+
+- 2. С каких IP-адресов поступала полезная нагрузка? (2 балла)
+
+# Ответ 2
+
+Очень много передачи данных с `81.177.221.242`
+
+Очень много передачи данных с `10.10.10.12`->`10.10.10.3` (прокси?)
 
 # Server
 - OS: Ubuntu 24.04.1 LTS (Noble Numbat)
@@ -48,6 +64,44 @@
 
 ### Сетап от оргов?
   
+# PCAPNG
+- Timeline: Jan 22 22:32:53 -> 22:36:28
+
+```
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: The canary thread is apparently starving. Taking action.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Demoting known real-time threads.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2387 of process 2357.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 3774 of process 3549.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2186 of process 2144.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2144 of process 2144.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2164 of process 2143.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2143 of process 2143.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2157 of process 2133.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2133 of process 2133.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Successfully demoted thread 2153 of process 2136.
+Jan 22 22:34:10 fileshare rtkit-daemon[1383]: Demoted 9 threads.
+Jan 22 22:34:26 fileshare systemd[1]: Started anacron.service - Run anacron jobs.
+Jan 22 22:34:26 fileshare anacron[5038]: Anacron 2.3 started on 2025-01-22
+Jan 22 22:34:26 fileshare anacron[5038]: Normal exit (0 jobs run)
+Jan 22 22:34:26 fileshare systemd[1]: anacron.service: Deactivated successfully.
+Jan 22 22:34:49 fileshare tracker-miner-fs-3[5043]: (tracker-extract-3:5043): GLib-GIO-WARNING **: 22:34:49.862: Error creating IO channel for /proc/self/mountinfo: Invalid argument (g-io-error-quark, 13)
+Jan 22 22:35:01 fileshare CRON[5049]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+Jan 22 22:35:01 fileshare CRON[5050]: (root) CMD (command -v debian-sa1 > /dev/null && debian-sa1 1 1)
+Jan 22 22:35:01 fileshare CRON[5049]: pam_unix(cron:session): session closed for user root
+Jan 22 22:35:11 fileshare systemd[1]: Starting update-notifier-download.service - Download data for packages that failed at package install time...
+Jan 22 22:35:11 fileshare systemd[1]: update-notifier-download.service: Deactivated successfully.
+Jan 22 22:35:11 fileshare systemd[1]: Finished update-notifier-download.service - Download data for packages that failed at package install time.
+Jan 22 22:35:12 fileshare dbus-daemon[793]: [system] Activating via systemd: service name='org.freedesktop.timedate1' unit='dbus-org.freedesktop.timedate1.service' requested by ':1.28' (uid=0 pid=815 comm="/usr/lib/snapd/snapd" label="unconfined")
+Jan 22 22:35:12 fileshare systemd[1]: Starting systemd-timedated.service - Time & Date Service...
+Jan 22 22:35:13 fileshare dbus-daemon[793]: [system] Successfully activated service 'org.freedesktop.timedate1'
+Jan 22 22:35:13 fileshare systemd[1]: Started systemd-timedated.service - Time & Date Service.
+Jan 22 22:35:13 fileshare kernel: audit: type=1107 audit(1737574513.009:159): pid=793 uid=101 auid=4294967295 ses=4294967295 subj=unconfined msg='apparmor="DENIED" operation="dbus_method_call"  bus="system" path="/org/freedesktop/timedate1" interface="org.freedesktop.DBus.Properties" member="GetAll" mask="send" name=":1.132" pid=3549 label="snap.firefox.firefox" peer_pid=5056 peer_label="unconfined"
+                                   exe="/usr/bin/dbus-daemon" sauid=101 hostname=? addr=? terminal=?'
+Jan 22 22:35:43 fileshare systemd[1]: systemd-timedated.service: Deactivated successfully.
+Jan 22 22:35:45 fileshare PackageKit[1749]: daemon quit
+Jan 22 22:35:45 fileshare systemd[1]: packagekit.service: Deactivated successfully.
+Jan 22 22:36:11 fileshare systemd[2116]: launchpadlib-cache-clean.service - Clean up old files in the Launchpadlib cache was skipped because of an unmet condition check (ConditionPathExists=/home/ioal/.launchpadlib/api.launchpad.net/cache).
+```
 
 ---
 
