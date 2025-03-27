@@ -151,4 +151,6 @@ Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal
 
 Когда я дошел до `app` я решил погуглить `"CUSTOM_write found"` и нашел единственную ссылку на проект на гитхабе ([linux-anti-debugging](https://github.com/tobyxdd/linux-anti-debugging/)), который использовал `ptrace` для обфускации
 
+## Задание 2-6
 
+Как настало время решать 2-6 я проконсультировался с `gemini-2.5-pro-exp-03-25` и мне было предложено использовать `hexdump`, где я и увидел сигнатуру `beef dead bade c0fe` во всех зашифрованных файлах
