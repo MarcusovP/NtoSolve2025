@@ -1,0 +1,5 @@
+Нужно добавить в WAF находящийся по пути /etc/nginx/modsecurity.d/modsecurity.conf добавить правило
+
+SecRule FILES_TMPNAMES "@rx \.pkl$" "chain,id:1000,phase:2,deny,status:403,msg:'Blocked'" "SecRule FILES_CONTENT "@rx (__reduce__|__setstate__|os\.system|subprocess|eval\(|exec\()""
+
+FILES_TMPNAMES “@rx .pkl$” проверяет что файл pkl, chain делается для проверки содержимого.
