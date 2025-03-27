@@ -22,7 +22,7 @@
 - [ ] [Контейнер](ctf/dso/Ko.md) ( /10)
 ### Инфраструктура
 - [x] [Сервис печати 1](ctf/ifr/SP1.md) (10/10)
-- [ ] [Jira](ctf/ifr/Jira.md) ( /10)
+- [x] [Jira](ctf/ifr/Jira.md) ( /10)
 - [x] [Confluence 1](ctf/ifr/Confl1.md) (10/10)
 - [ ] [NAS 1](ctf/ifr/NAS1.md) ( /20)
 - [x] [NAS 2](ctf/ifr/NAS2.md) (20/20)
